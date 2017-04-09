@@ -1,1 +1,1 @@
-# SAMS (Smart Addendance Management Systems)
+# SAMS (Smart Attendance Management Systems)
