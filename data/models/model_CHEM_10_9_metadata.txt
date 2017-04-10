@@ -1,0 +1,15 @@
+SPECS:
+shape->(50, 50, 3)
+dataset_shape->(13, 7500)
+nb_classes->2
+dtype->uint8
+training_batch_size->10
+data_batch_size->50
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/CHEM_train.h5
+label_array_shape->(13, 1)
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_CHEM_10_9.h5
+:SPECS_END
+LABEL_MAP:
+0->141150045
+1->14115008
+:LABEL_MAP_END

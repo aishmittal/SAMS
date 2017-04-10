@@ -257,11 +257,11 @@ def getFacesForPrediction (img,prediction_img_shape):
     gray = loader.cv.cvtColor(img, loader.cv.COLOR_BGR2GRAY)
     face_cascade = loader.cv.CascadeClassifier(bfl.HAAR_CASCADE_CLASSIFIER_LOCATION)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)#coordinates
-    print('faces:\n',faces)
+    # print('faces:\n',faces)
     num_of_faces=faces.shape[0]
     pims=prediction_img_shape
     print("Num:",num_of_faces)
-    print("Faces:",type(faces),faces)
+    # print("Faces:",type(faces),faces)
     i=-1
     face_array=loader.np.empty(shape=(num_of_faces,pims[0],pims[1],pims[2]),dtype=img.dtype)
     for (x,y,w,h) in faces:
@@ -269,7 +269,7 @@ def getFacesForPrediction (img,prediction_img_shape):
         face_array[i]=loader.cv.resize(img[ y:y+h,x:x+w],(pims[0],pims[1]))
         #cv.imshow(str(i),face_array[i])
         
-        print(face_array.shape)
+        print("Face Shape: ",face_array.shape)
         #cv.waitKey(0)
         #print(":",i,":",face_array)
     #cv.destroyAllWindows()
@@ -297,7 +297,7 @@ def getLabelMap (list_of_tuples):
 def labelFaces (model_loc,model_metadata_loc,image):
     md=loader.loadMetaData(model_metadata_loc)
     label_map= getLabelMap (md[1])
-    print ("Metadata: ",md)
+    # print ("Metadata: ",md)
     img=image.copy()
     face_array,faces=getFacesForPrediction(img,md[0]["shape"])
 

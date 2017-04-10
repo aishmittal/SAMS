@@ -32,8 +32,10 @@ cursor = conn.cursor()
 new_user_added = False
 current_subject_code = ''
 current_student_enroll_no = 0
+current_model_path = ''
+current_model_md_path = ''
 
-def query(comm,params):
+def query(comm,params=()):
     cursor.execute(comm,params)
     conn.commit()
     return cursor
@@ -82,12 +84,12 @@ class WindowMain(QWidget):
 
     def onclick_button1(self):
         # Register the student
-        # win.hide()
+        win.hide()
         winRegister.show()
 
     def onclick_button2(self):
         # Take Attendance
-        # win.hide()
+        win.hide()
         winTakeAttnSelectClass.show()
 
     def centerWindow(self):
@@ -426,7 +428,11 @@ class WindowRegisterStudentPhotos(QWidget):
                                                              MODLP,MFN,70,2,
                                                              0.8,15,0.2,TD_LOC,TD_MD_LOC,10000)
         print(trained_model_path)
-
+        model_name = os.path.basename(trained_model_path)
+        format_str = """UPDATE subjects SET model_name = ? WHERE subject_code = ?"""             
+        params = (model_name, current_subject_code)         
+        conn.execute(format_str,params)
+        conn.commit()
 
 
         MODEL_LOC=MODLP+"/"+MFN+".h5"
@@ -436,12 +442,12 @@ class WindowRegisterStudentPhotos(QWidget):
         cmg.evaluateModel (trained_model_path,TD_LOC,TD_MD_LOC)
 
 
-        img=dsop.cv.imread('2.jpg')
+        # img=dsop.cv.imread('2.jpg')
 
-        pred_results = cmg.labelFaces(trained_model_path,model_md_path,img)
-        print ("Prediction_results:\n",pred_results)
-        dsop.cv.imshow("Img",pred_results["image"])
-        dsop.cv.waitKey(0)
+        # pred_results = cmg.labelFaces(trained_model_path,model_md_path,img)
+        # print ("Prediction_results:\n",pred_results)
+        # dsop.cv.imshow("Img",pred_results["image"])
+        # dsop.cv.waitKey(0)
 
         
             
@@ -557,12 +563,39 @@ class WindowTakeAttnSelectClass(QWidget):
 
     def startClass(self):
         # Check which Class is selected!
-        print(self.subjectSelect.currentRow())
+        global current_subject_code
+        global current_model_path
+        global current_model_md_path
+        # print(self.subjectSelect.currentRow())
         subject_name = self.subjectSelect.currentItem().text()
         subject_code = self.res[self.subjectSelect.currentRow()][2]
-        print(subject_name,subject_code)
-        global current_subject_code
+        # print(subject_name,subject_code)
+        
         current_subject_code = subject_code
+        sql_command = "SELECT model_name FROM subjects WHERE subject_code = '%s' " % (current_subject_code)
+        cursor.execute(sql_command)
+        self.res2 = cursor.fetchone()
+        model_name  = self.res2[0]
+        # print(model_name) 
+        
+        current_model_path = os.path.join(model_path,model_name)
+        current_model_md_path = os.path.join(model_path,model_name.split('.')[0]+'_metadata.txt')
+        print("Model Path:",current_model_path)
+        print("Model Metadata Path:",current_model_md_path)
+       
+        sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' " % (current_subject_code)        
+        enroll_list = int_select_query(sql_command)
+        col = ""
+        for i in enroll_list:
+            col+=",\n'%s' INTEGER NOT NULL DEFAULT 0" % (str(i))
+        
+        sql_command = """CREATE TABLE IF NOT EXISTS %s (
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    date_and_time DATETIME NOT NULL DEFAULT (datetime('now','localtime'))%s
+                    );""" %(current_subject_code,col)
+        
+        print(sql_command)            
+        query(sql_command)            
         
         winTakeAttnSelectClass.hide()
         winTakeAttnGroupPhotos.show()
@@ -589,8 +622,6 @@ class WindowTakeAttnGroupPhotos(QWidget):
         self.faceCascade = cv2.CascadeClassifier(self.cascPath)
         self.snapshotCnt=0
         self.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
-        
-        
         self.initUI()
 
     def initUI(self):
@@ -644,16 +675,6 @@ class WindowTakeAttnGroupPhotos(QWidget):
         self.setLayout(self.hbox1)
 
 
-    def initDir(self):
-        self.store_dir = os.path.join(base_path,'tmp')
-        if os.path.isdir(self.store_dir)==False:
-            try:
-                original_umask = os.umask(0)
-                os.makedirs(self.store_dir)
-            finally:
-                os.umask(original_umask)
-
-
     def display_video_stream(self):
         r , frame = self.capture.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -676,9 +697,21 @@ class WindowTakeAttnGroupPhotos(QWidget):
   
 
     def startCapture(self):
-        self.initDir()
-        self.capturing = True
-        self.capture = cv2.VideoCapture(camera_port)
+        if not self.capturing: 
+            self.capturing = True
+            if not hasattr(self,'attendance_record'):
+                self.attendance_record = {}
+                sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' " % (current_subject_code)
+                # cursor.execute(sql_command)
+                # res = cursor.fetchall()
+                res = int_select_query(sql_command)
+                if len(res)>0:
+                    print(res)
+                    for i in res:
+                        self.attendance_record[str(i)]=0
+
+                print(self.attendance_record)
+            self.capture = cv2.VideoCapture(camera_port)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.display_video_stream)
         self.timer.start(30)
@@ -705,31 +738,24 @@ class WindowTakeAttnGroupPhotos(QWidget):
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = self.faceCascade.detectMultiScale(
                     gray,
-                    scaleFactor=1.1,
-                    minNeighbors=5,
-                    minSize=(40, 40)
+                    scaleFactor=1.3,
+                    minNeighbors=5
                 )
-                if len(faces)==0:
-                    return
-                max_area = 0
-                mx = 0
-                my = 0 
-                mh = 0 
-                mw = 0
-                for (x, y, w, h) in faces:
-                    if w*h > max_area:
-                        mx = x
-                        my = y
-                        mh = h
-                        mw = w
-                        max_area=w*h    
-                
-                image_crop = frame[my:my+mh,mx:mx+mw]
-                self.snapshotCnt=self.snapshotCnt+1
-                # self.messageLbl.setText('Process: Total snapshots captured: %d (Remaining: %d)' % (self.snapshotCnt,self.maxSnapshotCnt-self.snapshotCnt))
-                file_name = 'img_%d.jpg'% (self.snapshotCnt)
-                file = os.path.join(self.store_dir,file_name)
-                cv2.imwrite(file, image_crop)
+                if len(faces)>0:
+                    self.snapshotCnt=self.snapshotCnt+1
+                    pred_results=cmg.labelFaces(current_model_path,current_model_md_path,frame)
+                    # print("--- Predicted Results --- : \n ",pred_results)
+                    print(" Label_Map : ",pred_results['label_map'])
+                    print(" predicted_labels_and_confidences : ",pred_results['predicted_labels_and_confidences'])
+                    dict_label = dict(pred_results['label_map'])
+                    
+                    for lbl, cnf in pred_results['predicted_labels_and_confidences']:
+                        if cnf>=0.50:
+                            enroll = dict_label[lbl]
+                            if self.attendance_record[enroll]==0:
+                                self.attendance_record[enroll]=1
+                    print(self.attendance_record)
+                    
 
             except Exception as e:
                 self.messageLbl.setText('Error: Snapshot capturing failed')
@@ -738,8 +764,21 @@ class WindowTakeAttnGroupPhotos(QWidget):
 
 
     def endClass(self):
+        val1 = ''
+        val2 = ''
+        for enroll, present in self.attendance_record.items():
+            val1 = val1+"'"+ str(enroll)+"'" + ','
+            val2  = val2+str(present) + ','
+        val1 = val1[:-1]
+        val2 = val2[:-1]    
+        format_str = """INSERT INTO %s (%s) VALUES (%s);""" % (current_subject_code,val1,val2)
+        print(format_str)
+              
+        conn.execute(format_str)
+        conn.commit()
         self.stopCapture()
         self.snapshotCnt=0
+
         # end class
 
 

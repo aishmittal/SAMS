@@ -1,0 +1,15 @@
+SPECS:
+training_batch_size->10
+shape->(50, 50, 3)
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_TST3_10_68.h5
+data_batch_size->50
+nb_classes->2
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/TST3_train.h5
+dataset_shape->(13, 7500)
+label_array_shape->(13, 1)
+dtype->uint8
+:SPECS_END
+LABEL_MAP:
+0->2
+1->1
+:LABEL_MAP_END
