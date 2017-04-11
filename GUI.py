@@ -2,6 +2,7 @@ import os
 import sys
 import csv
 import cv2
+import time
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
@@ -35,6 +36,7 @@ current_student_enroll_no = 0
 current_model_path = ''
 current_model_md_path = ''
 
+
 def query(comm,params=()):
     cursor.execute(comm,params)
     conn.commit()
@@ -64,124 +66,223 @@ class WindowMain(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
 
     def initUI(self):
         self.setWindowTitle("SAMs - Smart Attendance Management system")
-        self.resize(window_width, window_height)
-        self.centerWindow()
+        self.setFixedSize(window_width, window_height)
+  
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
         self.vbox = QVBoxLayout()
-        self.vbox.setAlignment(Qt.AlignCenter)
+        # self.vbox.setAlignment(Qt.AlignCenter)
 
-        self.button1 = QPushButton("Register", self)
+        self.button1 = QPushButton("Register")
         self.button1.clicked.connect(self.onclick_button1)
 
-        self.button2 = QPushButton("Take Attendance", self)
+        self.button2 = QPushButton("Take Attendance")
         self.button2.clicked.connect(self.onclick_button2)
+
+        self.button3 = QPushButton("Show Attendance Records")
+        self.button3.clicked.connect(self.onclick_button3)
+
+        self.button4 = QPushButton("Exit")
+        self.button4.clicked.connect(self.quitApp)
+
+        self.button1.setFixedWidth(400)
+        self.button2.setFixedWidth(400)
+        self.button3.setFixedWidth(400)
+        self.button4.setFixedWidth(400)
 
         self.vbox.addWidget(self.button1)
         self.vbox.addWidget(self.button2)
-        self.setLayout(self.vbox)
+        self.vbox.addWidget(self.button3)
+        self.vbox.addWidget(self.button4)
+        self.vbox.setContentsMargins(100, 30, 100, 30)
+        self.vbox.setSpacing(15)
+
+        self.frame = QFrame()
+        
+        self.frame.setObjectName('gframe')
+        self.frame.setLayout(self.vbox)
+
+        self.hbox = QHBoxLayout()
+        self.hbox.setAlignment(Qt.AlignCenter)
+        self.hbox.addWidget(self.frame)
+
+        # self.addWidget(self.frame)
+        self.setLayout(self.hbox)
+
+    def setGeom(self,geom):
+        self.setGeometry(geom)
 
     def onclick_button1(self):
         # Register the student
+        winRegister.setGeometry(winRegister.frameGeometry())
         win.hide()
         winRegister.show()
 
     def onclick_button2(self):
         # Take Attendance
+        winTakeAttnSelectClass.setGeometry(winTakeAttnSelectClass.frameGeometry())
         win.hide()
+        winTakeAttnSelectClass.initSubjectSelect()
         winTakeAttnSelectClass.show()
 
-    def centerWindow(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
+    def onclick_button3(self):
+        # Take Attendance
+        winShowAttnSelectClass.setGeometry(winShowAttnSelectClass.frameGeometry())
+        win.hide()
+        winShowAttnSelectClass.initSubjectSelect()
+        winShowAttnSelectClass.show()
+
+    def quitApp(self):
+        quit_msg = "Are you sure you want to exit the program?"
+        reply = QMessageBox.question(self, 'Message', 
+                         quit_msg, QMessageBox.Yes, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            QtCore.QCoreApplication.instance().quit()
+
+
 
 
 class WindowRegister(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        
 
     def initUI(self):
-        self.setWindowTitle("Register")
+        self.setWindowTitle("Register Subject")
         self.resize(window_width, window_height)
-        self.centerWindow()
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
+        self.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
+
         self.fbox = QFormLayout()
+        self.vbox = QVBoxLayout()
 
         self.textLabel1 = QLabel("Subject Name: ", self)
         self.textLabel2 = QLabel("Subject Code: ", self)
         self.textLabel3 = QLabel("No. of Students: ", self)
         self.messageLbl = QLabel('')
+        font1 = QFont('Helvetica', small_text_size)
+        self.messageLbl.setFont(font1)
         
         self.lineEdit1 = QLineEdit(self)
         self.lineEdit2 = QLineEdit(self)
         self.lineEdit3 = QLineEdit(self)
 
-        self.button1 = QPushButton("Start", self)
-        self.button1.clicked.connect(self.onclick_button1)
+        self.hbox = QHBoxLayout()
+        
+        self.nextButton = QPushButton("Next", self)
+        self.nextButton.clicked.connect(self.next)
+
+        self.backButton = QPushButton("Back", self)
+        self.backButton.clicked.connect(self.back)
+
+        self.hbox.addWidget(self.nextButton)
+        self.hbox.addWidget(self.backButton)
+        self.hbox.setObjectName('gframe')
 
         self.fbox.addRow(self.textLabel1,self.lineEdit1)
         self.fbox.addRow(self.textLabel2,self.lineEdit2)
         self.fbox.addRow(self.textLabel3,self.lineEdit3)
         self.fbox.addRow(self.messageLbl)
-        self.fbox.addRow(self.button1)
-        self.fbox.setAlignment(Qt.AlignCenter)
-        self.fbox.setContentsMargins(100, 50, 100, 50)
+        
+        self.fbox.setContentsMargins(80, 40, 80, 40)
         self.fbox.setSpacing(10)
-        self.setLayout(self.fbox)
+        self.form = QFrame()
+        self.form.setLayout(self.fbox)
+        self.form.setObjectName('gframe')
 
-    def onclick_button1(self):
+        self.buttons = QFrame()
+        self.buttons.setLayout(self.hbox)
+        # self.buttons.setObjectName('gframe')
+
+        self.fbox.setAlignment(Qt.AlignCenter)
+        self.vbox.setAlignment(Qt.AlignCenter)
+        
+        self.vbox.addWidget(self.form)
+        self.vbox.addWidget(self.buttons)
+
+        self.setLayout(self.vbox)
+
+    def back(self):
+        self.lineEdit1.clear()
+        self.lineEdit2.clear()
+        self.lineEdit3.clear()
+        win.setGeometry(win.frameGeometry())
+        win.setGeometry(win.frameGeometry())
+        winRegister.hide()
+        # time.sleep(0.05)
+
+        win.show()
+
+    def next(self):
         # Start the Registration process
         if (not self.lineEdit1.text()) or (not self.lineEdit2.text()) or (not self.lineEdit3.text()):
             self.messageLbl.setText('Error: One or more required fields empty! verification failed')
             return
+
+        elif int(self.lineEdit3.text())<=1:
+            self.messageLbl.setText('Error: Require more than 1 student for a course!')
+            return
+
         else:
             subject_name = str(self.lineEdit1.text())
             subject_code = str(self.lineEdit2.text())
             no_of_students = str(self.lineEdit3.text())
-            print(subject_name,subject_code,no_of_students)
+            # print(subject_name,subject_code,no_of_students)
+            
             sql_command = """SELECT * FROM subjects WHERE subject_code = ? """
             cursor.execute(sql_command,(subject_code,))
+            
             if cursor.fetchone():
                 self.messageLbl.setText('Error: Subject already exist!')
                 return
+            
             else:
                 self.messageLbl.setText('Success: Verification Successful!')
+                
                 format_str = """INSERT INTO subjects (subject_id,subject_name,subject_code,no_of_students) 
                      VALUES (NULL,?,?,?);"""
                 params = (subject_name, subject_code,no_of_students)         
                 conn.execute(format_str,params)
                 conn.commit()
+                
                 global current_subject_code
                 current_subject_code = subject_code
                 self.messageLbl.setText('Success: Subject added to database sucessfully!')
                 subj_dir = os.path.join(image_path,subject_code)
+                
                 if not os.path.exists(subj_dir):
                     os.makedirs(subj_dir)
+                # print(int(no_of_students))
+                winRegisterStudentPhotos.newSubjectReg(int(no_of_students))
+                winRegisterStudentDetails.newSubjectReg(int(no_of_students))
             
-        winRegister.hide()
-        self.lineEdit1.clear()
-        self.lineEdit2.clear()
-        winRegisterStudentDetails.show()
+                self.lineEdit1.clear()
+                self.lineEdit2.clear()
+                self.lineEdit3.clear()
+                winRegisterStudentDetails.setGeometry(winRegisterStudentDetails.frameGeometry())
+                winRegister.hide()
+                winRegisterStudentDetails.setWindowTitle('Add details of student 1 (Remaining %d)'%(int(no_of_students)-1))
+                winRegisterStudentDetails.show()
 
-    def centerWindow(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
 
 
 class WindowRegisterStudentDetails(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        
+        self.reg_count = 0
+        self.total_student_count = 0
 
     def initUI(self):
         self.setWindowTitle("Enter Student Details")
         self.resize(window_width, window_height)
-        self.centerWindow()
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
         self.fbox = QFormLayout()
 
         self.textLabel1 = QLabel("Enrollment No: ", self)
@@ -208,7 +309,7 @@ class WindowRegisterStudentDetails(QWidget):
         else:
             enroll_no = str(self.lineEdit1.text())
             student_name = str(self.lineEdit2.text())
-            print(enroll_no,student_name)
+            print("Added: ", enroll_no, student_name)
             sql_command = """SELECT * FROM reg_students WHERE enroll_no = ? AND subject_code = ? """
             cursor.execute(sql_command,(enroll_no,current_subject_code))
             if cursor.fetchone():
@@ -227,25 +328,32 @@ class WindowRegisterStudentDetails(QWidget):
                 self.store_dir = os.path.join(image_path,current_subject_code,str(current_student_enroll_no))
                 if not os.path.exists(self.store_dir):
                     os.makedirs(self.store_dir)
+
+                
         # Forward to next page
         self.messageLbl.clear()
         self.lineEdit1.clear()
         self.lineEdit2.clear()
+        winRegisterStudentPhotos.setGeometry(winRegisterStudentPhotos.frameGeometry())
         winRegisterStudentDetails.hide()
+        winRegisterStudentPhotos.setWindowTitle('Add Face Images of student %d (Remaining %d)'%(self.reg_count+1,self.total_student_count-self.reg_count-1))
         winRegisterStudentPhotos.show()
 
-    def centerWindow(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
+
+    def newSubjectReg(self,n):
+        self.reg_count = 0
+        self.total_student_count = n
+
+    def newStudentAdded(self):
+        self.reg_count = self.reg_count+1
+
 
 class WindowRegisterStudentPhotos(QWidget):
     def __init__(self):
         super().__init__()
         self.capturing=False
         self.setFixedSize(700,460)
-        self.centerWindow()
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
         self.video_size = QSize(400, 300)
         self.snapshot_size = QSize(80, 80)
         self.cascPath = 'haarcascade_frontalface_default.xml'
@@ -253,9 +361,9 @@ class WindowRegisterStudentPhotos(QWidget):
         self.snapshotCnt=0
         self.maxSnapshotCnt=8
         self.captureCompleted = False
+        self.reg_count = 0
+        self.total_student_count = 0
         self.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
-        
-        
         self.initUI()
 
     def initUI(self):
@@ -295,7 +403,7 @@ class WindowRegisterStudentPhotos(QWidget):
         self.hbox.addWidget(self.stopButton)
         self.hbox.addWidget(self.takeSnapshotButton)
         self.hbox.addWidget(self.nextButton)
-        self.hbox.addWidget(self.trainModelButton)
+        # self.hbox.addWidget(self.trainModelButton)
         
         self.mhbox = QHBoxLayout()
         self.mhbox.setAlignment(Qt.AlignCenter)
@@ -370,6 +478,7 @@ class WindowRegisterStudentPhotos(QWidget):
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
 
     def nextStudent(self):
+
         self.messageLbl.clear()
         for i in range(self.maxSnapshotCnt):
             self.snpLabels[i].clear()
@@ -377,14 +486,27 @@ class WindowRegisterStudentPhotos(QWidget):
         self.captureCompleted = False  
         self.capturing = False  
         self.imageLabel.clear()
+        self.reg_count = self.reg_count + 1
+        if self.reg_count == self.total_student_count-1:
+            self.nextButton.setText('Train Model')
 
-        winRegisterStudentPhotos.hide()
-        winRegisterStudentDetails.show()
+        if self.reg_count < self.total_student_count:
+            winRegisterStudentDetails.setGeometry(winRegisterStudentDetails.frameGeometry())
+            winRegisterStudentPhotos.hide()
+            winRegisterStudentDetails.setWindowTitle('Add details of student %d (Remaining %d)'%(self.reg_count+1,self.total_student_count-self.reg_count-1))
+            winRegisterStudentDetails.show()
+
+        else:
+            self.trainModel()    
+
+    def newSubjectReg(self,n):
+        self.reg_count = 0
+        self.total_student_count = n
+
 
     def trainModel(self):
-                #MY GLOBAL CONSTANTS
+     
         LOAD_PATH= os.path.join(image_path,current_subject_code)
-        #STORE_PATH=store_path#store data in this folder
         DSETP=dataset_path
         MODLP=model_path
 
@@ -395,62 +517,77 @@ class WindowRegisterStudentPhotos(QWidget):
         DBS=500# data batch size
         TBS=10# training batch size
         DMY="no val"# dummmy
+        try:
 
-        #load_path: 
-        #DSETP : dataset path where you want to save. You will pass this path. f
-        dsop.createSingleBlockDataset(LOAD_PATH,DSETP,DSETFN,(50,50,3))
-        md=dsop.loadMetaData(DSETP+'/'+DSETFN+'_metadata.txt')
-        print(md[0],md[0]["shape"])
+            print('-------------------- Model Training Started ----------------------')
+            dsop.createSingleBlockDataset(LOAD_PATH,DSETP,DSETFN,(50,50,3))
+            md=dsop.loadMetaData(DSETP+'/'+DSETFN+'_metadata.txt')
+            print(md[0],md[0]["shape"])
 
-        print("PATH:",DSETP+"/"+DSETFN+".h5",md[0]["shape"])
-        #dsop.navigateDataset(DSETP+"/"+DSETFN+".h5",md[0]["shape"],0)
+            print("PATH:",DSETP+"/"+DSETFN+".h5",md[0]["shape"])
 
-        dsop.partitionDataset(DSETP+"/"+DSETFN+".h5",DSETP+"/"+DSETFN+"_metadata.txt",(80,20))
+            dsop.partitionDataset(DSETP+"/"+DSETFN+".h5",DSETP+"/"+DSETFN+"_metadata.txt",(80,20))
 
-        md=dsop.loadMetaData(DSETP+'/'+DSETFN+'_train_metadata.txt')
-        model= cmg.getModelFrame(md[0]["shape"],int(md[0]["nb_classes"]),3)
-        DBS= md[0]["dataset_shape"][0]
-        MFN=MFN+"_"+str(NEPOCH)
-        #model_path, model_md_path=getTrainedModel(model,DSETP+"/"+DSETFN+"_train.h5",DSETP+"/"+DSETFN+"_train_metadata.txt",
-        #                              MODLP,MFN,NEPOCH,DBS,TBS)
+            md=dsop.loadMetaData(DSETP+'/'+DSETFN+'_train_metadata.txt')
+            model= cmg.getModelFrame(md[0]["shape"],int(md[0]["nb_classes"]),3)
+            DBS= md[0]["dataset_shape"][0]
+            MFN=MFN+"_"+str(NEPOCH)
 
 
-        MODEL_LOC=MODLP+"/"+MFN+".h5"
-        TD_LOC=DSETP+"/"+DSETFN+"_test.h5"
-        TD_MD_LOC=DSETP+"/"+DSETFN+"_test_metadata.txt"
+            MODEL_LOC=MODLP+"/"+MFN+".h5"
+            TD_LOC=DSETP+"/"+DSETFN+"_test.h5"
+            TD_MD_LOC=DSETP+"/"+DSETFN+"_test_metadata.txt"
+
+            trained_model_path, model_md_path=cmg.getCustomOptimalTrainedModel(model,DSETP+"/"+DSETFN+"_train.h5",
+                                                                       DSETP+"/"+DSETFN+"_train_metadata.txt",
+                                                                 MODLP,MFN,70,2,
+                                                                 0.8,15,0.2,TD_LOC,TD_MD_LOC,1000)
+            print(trained_model_path)
+            model_name = os.path.basename(trained_model_path)
+            format_str = """UPDATE subjects SET model_name = ? WHERE subject_code = ?"""             
+            params = (model_name, current_subject_code)         
+            conn.execute(format_str,params)
+            conn.commit()
 
 
-        # tu ye use kr lena for training the model so that you can use it for prediction later.
-        #It will return the path of the best model. Though the model will be saved at othercheck points also(e.g. here
-        #once the accuracy reaches 70 )
-        trained_model_path, model_md_path=cmg.getCustomOptimalTrainedModel(model,DSETP+"/"+DSETFN+"_train.h5",
-                                                                   DSETP+"/"+DSETFN+"_train_metadata.txt",
-                                                             MODLP,MFN,70,2,
-                                                             0.8,15,0.2,TD_LOC,TD_MD_LOC,10000)
-        print(trained_model_path)
-        model_name = os.path.basename(trained_model_path)
-        format_str = """UPDATE subjects SET model_name = ? WHERE subject_code = ?"""             
-        params = (model_name, current_subject_code)         
-        conn.execute(format_str,params)
-        conn.commit()
+            MODEL_LOC=MODLP+"/"+MFN+".h5"
+            TD_LOC=DSETP+"/"+DSETFN+"_test.h5"
+            TD_MD_LOC=DSETP+"/"+DSETFN+"_test_metadata.txt"
+
+            cmg.evaluateModel (trained_model_path,TD_LOC,TD_MD_LOC)
+            print('-------------------- Model Training Completed --------------------')
+
+        except Exception as e:
+                self.messageLbl.setText('Error: Some error while trainig model! check console')
+                print("Model Training Failed...\n Errors:")
+                print(e)
+
+        self.finishRegistration()
 
 
-        MODEL_LOC=MODLP+"/"+MFN+".h5"
-        TD_LOC=DSETP+"/"+DSETFN+"_test.h5"
-        TD_MD_LOC=DSETP+"/"+DSETFN+"_test_metadata.txt"
-
-        cmg.evaluateModel (trained_model_path,TD_LOC,TD_MD_LOC)
-
-
-        # img=dsop.cv.imread('2.jpg')
-
-        # pred_results = cmg.labelFaces(trained_model_path,model_md_path,img)
-        # print ("Prediction_results:\n",pred_results)
-        # dsop.cv.imshow("Img",pred_results["image"])
-        # dsop.cv.waitKey(0)
-
-        
+    def finishRegistration(self):
+        try:
+            sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)        
+            enroll_list = int_select_query(sql_command)
+            col = ""
+            for i in enroll_list:
+                col+=",\n'%s' INTEGER NOT NULL DEFAULT 0" % (str(i))
             
+            sql_command = """CREATE TABLE IF NOT EXISTS %s (
+                        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                        date_and_time DATETIME NOT NULL DEFAULT (datetime('now','localtime'))%s
+                        );""" %(current_subject_code,col)
+            query(sql_command)
+            print('-------------------- Registration Finished Successfully --------------------')
+
+        except Exception as e:
+                print("Error while creating attendance table...\n Errors:")
+                print(e)
+
+        winRegisterStudentPhotos.setGeometry(winRegisterStudentPhotos.frameGeometry())
+        winRegisterStudentPhotos.hide()
+        win.show()
+
 
     def startCapture(self):
         self.initDir()
@@ -524,11 +661,6 @@ class WindowRegisterStudentPhotos(QWidget):
             self.captureCompleted=True
             self.stopCapture()
 
-    def centerWindow(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
 
 
 
@@ -539,28 +671,40 @@ class WindowTakeAttnSelectClass(QWidget):
 
     def initUI(self):
         self.setWindowTitle("Select Subject")
-        self.resize(600, 250)
-        self.centerWindow()
+        self.resize(window_width, window_height)
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
         self.vbox = QVBoxLayout()
         self.subjectSelect = QListWidget()
       
+        self.hbox = QHBoxLayout()
         self.startButton = QPushButton("Start", self)
         self.startButton.clicked.connect(self.startClass)
+        self.backButton = QPushButton("Back", self)
+        self.backButton.clicked.connect(self.back)
+        
+        self.hbox.addWidget(self.startButton)
+        self.hbox.addWidget(self.backButton)
+        
         self.vbox.addWidget(self.subjectSelect)
-        self.vbox.addWidget(self.startButton)
+        self.vbox.addLayout(self.hbox)
         self.vbox.setAlignment(Qt.AlignCenter)
         self.setLayout(self.vbox)
+        self.initSubjectSelect()
+
+
+    def initSubjectSelect(self):
+        self.subjectSelect.clear()
         sql_command = """SELECT * FROM subjects"""
         self.res = multiple_select_query(sql_command)
-        # print(res)
         if len(self.res)>0:
             for i in range(0,len(self.res)):
-                # print(res[i][1])
                 self.subjectSelect.addItem(self.res[i][1])
-
-
-
-
+        
+    def back(self):
+        win.setGeometry(win.frameGeometry())
+        winTakeAttnSelectClass.hide()
+        win.show()
+                
     def startClass(self):
         # Check which Class is selected!
         global current_subject_code
@@ -569,6 +713,8 @@ class WindowTakeAttnSelectClass(QWidget):
         # print(self.subjectSelect.currentRow())
         subject_name = self.subjectSelect.currentItem().text()
         subject_code = self.res[self.subjectSelect.currentRow()][2]
+        print("Selected Subject: ",subject_name)
+
         # print(subject_name,subject_code)
         
         current_subject_code = subject_code
@@ -583,31 +729,32 @@ class WindowTakeAttnSelectClass(QWidget):
         print("Model Path:",current_model_path)
         print("Model Metadata Path:",current_model_md_path)
        
-        sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' " % (current_subject_code)        
-        enroll_list = int_select_query(sql_command)
-        col = ""
-        for i in enroll_list:
-            col+=",\n'%s' INTEGER NOT NULL DEFAULT 0" % (str(i))
         
-        sql_command = """CREATE TABLE IF NOT EXISTS %s (
-                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    date_and_time DATETIME NOT NULL DEFAULT (datetime('now','localtime'))%s
-                    );""" %(current_subject_code,col)
-        
-        print(sql_command)            
-        query(sql_command)            
-        
+        # print(sql_command)            
+        try:
+            sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)        
+            enroll_list = int_select_query(sql_command)
+            col = ""
+            for i in enroll_list:
+                col+=",\n'%s' INTEGER NOT NULL DEFAULT 0" % (str(i))
+            
+            sql_command = """CREATE TABLE IF NOT EXISTS %s (
+                        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                        date_and_time DATETIME NOT NULL DEFAULT (datetime('now','localtime'))%s
+                        );""" %(current_subject_code,col)
+            query(sql_command)
+
+        except Exception as e:
+                print("Error while creating attendance table...\n Errors:")
+                print(e)
+
+        winTakeAttnGroupPhotos.setGeometry(winTakeAttnGroupPhotos.frameGeometry())
         winTakeAttnSelectClass.hide()
         winTakeAttnGroupPhotos.show()
-
-        winTakeAttnGroupPhotos.setWindowTitle("Take Attendance Photos for " + demoVar)
+        winTakeAttnGroupPhotos.imageLabel.clear()
+        winTakeAttnGroupPhotos.setWindowTitle("Take Attendance Photos for " + subject_name + " class")
         
 
-    def centerWindow(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
 
 
 class WindowTakeAttnGroupPhotos(QWidget):
@@ -615,12 +762,13 @@ class WindowTakeAttnGroupPhotos(QWidget):
         super().__init__()
         self.capturing=False
         self.setFixedSize(700,460)
-        self.centerWindow()
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
         self.video_size = QSize(400, 300)
         self.snapshot_size = QSize(80, 80)
         self.cascPath = 'haarcascade_frontalface_default.xml'
         self.faceCascade = cv2.CascadeClassifier(self.cascPath)
         self.snapshotCnt=0
+        self.attendance_record={}
         self.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
         self.initUI()
 
@@ -699,18 +847,21 @@ class WindowTakeAttnGroupPhotos(QWidget):
     def startCapture(self):
         if not self.capturing: 
             self.capturing = True
-            if not hasattr(self,'attendance_record'):
+            self.snapshotCnt=0
+            print("--------------- Class Started -----------------")
+            if len(self.attendance_record)==0:
                 self.attendance_record = {}
-                sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' " % (current_subject_code)
+                sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)
                 # cursor.execute(sql_command)
                 # res = cursor.fetchall()
                 res = int_select_query(sql_command)
+                print(res)
                 if len(res)>0:
-                    print(res)
+                    # print(res)
                     for i in res:
                         self.attendance_record[str(i)]=0
 
-                print(self.attendance_record)
+                # print(self.attendance_record)
             self.capture = cv2.VideoCapture(camera_port)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.display_video_stream)
@@ -741,12 +892,16 @@ class WindowTakeAttnGroupPhotos(QWidget):
                     scaleFactor=1.3,
                     minNeighbors=5
                 )
+                print("\n--------------- Image Taken -----------------")
+
                 if len(faces)>0:
+
                     self.snapshotCnt=self.snapshotCnt+1
                     pred_results=cmg.labelFaces(current_model_path,current_model_md_path,frame)
                     # print("--- Predicted Results --- : \n ",pred_results)
-                    print(" Label_Map : ",pred_results['label_map'])
-                    print(" predicted_labels_and_confidences : ",pred_results['predicted_labels_and_confidences'])
+                    print("--- Predicted Results --- : \n ")
+                    print("Label Map : ",pred_results['label_map'])
+                    print("Predicted Labels and confidences : ",pred_results['predicted_labels_and_confidences'])
                     dict_label = dict(pred_results['label_map'])
                     
                     for lbl, cnf in pred_results['predicted_labels_and_confidences']:
@@ -754,8 +909,13 @@ class WindowTakeAttnGroupPhotos(QWidget):
                             enroll = dict_label[lbl]
                             if self.attendance_record[enroll]==0:
                                 self.attendance_record[enroll]=1
-                    print(self.attendance_record)
-                    
+                    print("Current Attandance Records: ",self.attendance_record)
+                                    
+                else:
+                    print("No Face Found")
+                    print("Current Attandance Records: ",self.attendance_record)    
+
+                print("--------------- Image Processing Completed -----------------\n")
 
             except Exception as e:
                 self.messageLbl.setText('Error: Snapshot capturing failed')
@@ -764,6 +924,8 @@ class WindowTakeAttnGroupPhotos(QWidget):
 
 
     def endClass(self):
+        print("--------------- Class Ended -----------------")
+        print("Final Attandance Records: ",self.attendance_record)
         val1 = ''
         val2 = ''
         for enroll, present in self.attendance_record.items():
@@ -772,37 +934,157 @@ class WindowTakeAttnGroupPhotos(QWidget):
         val1 = val1[:-1]
         val2 = val2[:-1]    
         format_str = """INSERT INTO %s (%s) VALUES (%s);""" % (current_subject_code,val1,val2)
-        print(format_str)
+        # print(format_str)
               
         conn.execute(format_str)
         conn.commit()
         self.stopCapture()
         self.snapshotCnt=0
+        self.attendance_record = {}
+        win.setGeometry(win.frameGeometry())
+        winTakeAttnGroupPhotos.hide()
+        win.show()
 
-        # end class
 
 
-    def centerWindow(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
-class WindowResults(QtGui.QMainWindow):
+class WindowShowAttnSelectClass(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("Attendance Results")
-        self.resize(600, 250)
-        self.centerWindow()
+        self.setWindowTitle("Select Subject")
+        self.resize(window_width, window_height)
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
+        self.vbox = QVBoxLayout()
+        self.subjectSelect = QListWidget()
+      
+        self.showButton = QPushButton("Show Attendance Records", self)
+        self.showButton.clicked.connect(self.showAttn)
+        self.backButton = QPushButton('Back')
+        self.backButton.clicked.connect(self.back)
+        self.hbox = QHBoxLayout()
+        self.hbox.addWidget(self.showButton)
+        self.hbox.addWidget(self.backButton)
+        self.vbox.addWidget(self.subjectSelect)
+        self.vbox.addLayout(self.hbox)
+        self.vbox.setAlignment(Qt.AlignCenter)
+        self.setLayout(self.vbox)
+        self.initSubjectSelect()
+        
 
-    def centerWindow(self):
-        qr = self.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
+    def initSubjectSelect(self):
+        self.subjectSelect.clear()
+        sql_command = """SELECT * FROM subjects"""
+        self.res = multiple_select_query(sql_command)
+        if len(self.res)>0:
+            for i in range(0,len(self.res)):
+                self.subjectSelect.addItem(self.res[i][1])
+        
+
+    def showAttn(self):
+        # Check which Class is selected!
+        global current_subject_code
+        # print(self.subjectSelect.currentRow())
+        subject_name = self.subjectSelect.currentItem().text()
+        subject_code = self.res[self.subjectSelect.currentRow()][2]
+        print("Selected Subject: ",subject_name)
+        
+        current_subject_code = subject_code
+        winShowAttnRecords.setGeometry(winShowAttnRecords.frameGeometry())
+        winShowAttnSelectClass.hide()
+        winShowAttnRecords.setWindowTitle("Attendance Records of " + subject_name + " class")
+        winShowAttnRecords.showRecords()
+        winShowAttnRecords.show()
+
+       
+        
+    def back(self):
+        win.setGeometry(win.frameGeometry())
+        winShowAttnSelectClass.hide()
+        win.show()
+
+
+class WindowShowAttnRecords(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle("Attendance Records")
+        self.resize(800, 400)
+        self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
+        self.vbox = QVBoxLayout()
+        self.vbox.setAlignment(Qt.AlignCenter)
+        self.recordsTable = QTableWidget()
+        self.backButton = QPushButton('Back')
+        self.backButton.clicked.connect(self.back)
+        self.vbox.addWidget(self.recordsTable)
+        self.vbox.addWidget(self.backButton)
+        self.setLayout(self.vbox)
+        
+        
+
+    def showRecords(self):
+        try:
+            sql_command1 = "SELECT * FROM %s" % (current_subject_code)
+            res1 = multiple_select_query(sql_command1)
+            sql_command2 = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)
+            enroll_list = int_select_query(sql_command2)
+            lecture_count = len(res1)
+            # print(res1,enroll_list)
+
+            self.tableHeaders = ['Enrollment No','Total Lectures','Present Count','Percent Attendance']
+            # for i in range(0,lecture_count):
+            #     self.tableHeaders.append('Lecture '+str(i+1))
+
+            # self.tableHeaders.append('Present Count')
+            # self.tableHeaders.append('Percent Attendance')
+
+
+
+            self.recordsTable.setRowCount(len(enroll_list))
+            # self.recordsTable.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            # self.recordsTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            self.recordsTable.setColumnCount(len(self.tableHeaders))
+            self.recordsTable.setHorizontalHeaderLabels(self.tableHeaders)
+            self.header = self.recordsTable.horizontalHeader()
+            self.header.setResizeMode(QHeaderView.Stretch)
+            # self.header.setStretchLastSection(True)
+            self.recordsTable.setContentsMargins(5,5,5,5)
+
+            for idx,enroll_no in enumerate(enroll_list):
+                sql_command = "SELECT `%s` FROM %s" % (str(enroll_no),current_subject_code)
+                attn = int_select_query(sql_command)
+                present = 0
+                for i in attn:
+                    present=present+i
+                attn_percent = (present/len(attn))*100
+                str_attn_percent =   '%.2f' % attn_percent
+                # print(sql_command)
+                # print(attn)
+                # row_content = [enroll_no]+attn+[present,str_attn_percent]
+                row_content = [enroll_no,len(attn),present,str_attn_percent]
+                # print(row_content)
+                for pos , item in enumerate(row_content):
+                        self.recordsTable.setItem(idx, pos , QTableWidgetItem(str(item)))
+
+
+
+        except Exception as e:
+                print('Attendance records does not exist please take attendance first')
+                print(e)
+
+        
+
+
+    def back(self):
+        winShowAttnSelectClass.setGeometry(winShowAttnSelectClass.frameGeometry())
+        winShowAttnRecords.hide()
+        winShowAttnSelectClass.show()
+
+
+
 
 class MainWindow:
     def __init__(self):
@@ -813,7 +1095,6 @@ class MainWindow:
         self.winRegisterStudentPhotos = WindowRegisterStudentPhotos()
         self.winTakeAttnGroupPhotos = WindowTakeAttnGroupPhotos()
         self.winResults = WindowResults()
-        self.win.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
         self.win.show()        
 
 if __name__ == '__main__':
@@ -821,9 +1102,11 @@ if __name__ == '__main__':
     win =  WindowMain()   
     winRegister = WindowRegister()
     winTakeAttnSelectClass = WindowTakeAttnSelectClass()
+    winShowAttnSelectClass = WindowShowAttnSelectClass()
+    winShowAttnRecords = WindowShowAttnRecords()
     winRegisterStudentDetails = WindowRegisterStudentDetails()
     winRegisterStudentPhotos = WindowRegisterStudentPhotos()
     winTakeAttnGroupPhotos = WindowTakeAttnGroupPhotos()
-    winResults = WindowResults()
+   
     win.show()        
     sys.exit(app.exec_())

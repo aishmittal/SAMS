@@ -41,12 +41,12 @@ def createSingleBlockDataset (load_path,store_path,filename,image_shape=(50,50,3
         for path,sub_dirs,files in os.walk(load_path):
             num_labels+=1
             current_folder=str(path).strip()
-            print("Folder:",current_folder)#remove_
+            # print("Folder:",current_folder)#remove_
             for file in files:
                 num_files+=1
                 current_file=current_folder+"/"+str(file).strip()
                 
-                print("---> ",current_file)#remove_
+                # print("---> ",current_file)#remove_
                 
         img=cv.imread(current_file)
         #calculate length of vector
@@ -56,7 +56,7 @@ def createSingleBlockDataset (load_path,store_path,filename,image_shape=(50,50,3
             img_shape=custom_shape
             for items in img_shape:
                 len_vector*=items
-            print (len_vector)
+            # print (len_vector)
         elif (img is not None):
             img_dtype=img.dtype
             img_shape=img.shape
@@ -148,13 +148,13 @@ def navigateDataset(file_location="/example_folder/example_file.h5",image_shape=
          print('again_see_RAM')
          x=X[:].reshape(X.shape[0],image_shape[0],image_shape[1],image_shape[2])
          y=Y[:].reshape(Y.shape[0],1)
-         print(y)
+         # print(y)
          for i in range(x.shape[0]):
             if(i==num_sample):
                 break
             cv.putText(x[i],str(y[i][0]),(round(image_shape[0]),round(image_shape[1]/2)), cv.FONT_HERSHEY_COMPLEX, 1,(0,0,255),1)
             cv.imshow('Images',x[i])
-            cv.waitKey(0)    
+            # cv.waitKey(0)    
 
 
 
@@ -210,14 +210,14 @@ def read_in_chunks(begin_at,batch_size,f):
      begin_at=0
      num_s=10#to_set
      x=X[begin_at:begin_at+num_s].reshape(num_s,592,896,3)
-     y=Y[begin_at:begin_at+num_s].reshape(num_s,1)
+     # y=Y[begin_at:begin_at+num_s].reshape(num_s,1)
      print(y)
      for i in range(x.shape[0]):
         cv.putText(x[i],str(y[i][0]),(60,90), cv.FONT_HERSHEY_COMPLEX, 1,(0,0,255),1)
         #cv.rectangle(x[i],(55,85),(100,100),(0,255,0),3)
         #cv.putText()
         cv.imshow('Win',x[i])
-        cv.waitKey(0)
+        # cv.waitKey(0)
      
 
             
@@ -234,7 +234,7 @@ def getNextBatch (batch_size,file_object,metadata,dtype='float32'):
         getNextBatch.specs=metadata[0]
         getNextBatch.max=getNextBatch.specs["dataset_shape"][0]
         getNextBatch.img_shp=getNextBatch.specs["shape"]
-        print("getShape",getNextBatch.img_shp)
+        # print("getShape",getNextBatch.img_shp)
     print("Current count:",getNextBatch.count,"f=",getNextBatch.f,"Actual:",file_object)
     if getNextBatch.f==file_object:
         try:

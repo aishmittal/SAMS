@@ -1,0 +1,15 @@
+SPECS:
+shape->(50, 50, 3)
+training_batch_size->10
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_MAT_10.h5
+dtype->uint8
+dataset_shape->(13, 7500)
+data_batch_size->50
+label_array_shape->(13, 1)
+nb_classes->2
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/MAT_train.h5
+:SPECS_END
+LABEL_MAP:
+0->15116002
+1->15116001
+:LABEL_MAP_END

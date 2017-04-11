@@ -1,0 +1,16 @@
+SPECS:
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_ENG_10_33.h5
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/ENG_train.h5
+training_batch_size->10
+nb_classes->3
+shape->(50, 50, 3)
+dataset_shape->(19, 7500)
+label_array_shape->(19, 1)
+data_batch_size->50
+dtype->uint8
+:SPECS_END
+LABEL_MAP:
+0->14115003
+1->14115001
+2->14115002
+:LABEL_MAP_END

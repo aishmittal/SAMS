@@ -172,14 +172,14 @@ def getTrainedModel(model_to_train,dataset_loc,metadata_loc,
         x=x.astype('float32')
         x=x.transpose(0,3,1,2)
         x=(x-100)/255
-        print("x:",x.shape)
-        print("y:",y.shape)
-        print(y_tr)
+        # print("x:",x.shape)
+        # print("y:",y.shape)
+        # print(y_tr)
         #for j in range(len(y_tr)):
             #print()
             #y[j][y_tr[j][0]]=1
         y = np_utils.to_categorical(y_tr, nb_classes)
-        print("Y:",y)
+        # print("Y:",y)
         history=model_to_train.fit(x,y,batch_size=training_batch_size,nb_epoch=num_epoch)
         generated_model_address=STORE_FOLDER+'/'+op_model_file_name+'.h5'
         model_to_train.save(generated_model_address)
@@ -229,7 +229,7 @@ def evaluateModel (model_loc,test_dataset_loc,test_metadata_loc,use_whole_datase
          x_test=x.transpose(0,3,1,2)
          x_test=x_test.astype('float32')
          x_test=(x_test-100)/255
-         print("X_Test.dtype",x_test.dtype)
+         # print("X_Test.dtype",x_test.dtype)
          model= load_model(model_loc)
          pred_label=model.predict(x_test)
          wrong_count=0;
@@ -260,7 +260,7 @@ def getFacesForPrediction (img,prediction_img_shape):
     # print('faces:\n',faces)
     num_of_faces=faces.shape[0]
     pims=prediction_img_shape
-    print("Num:",num_of_faces)
+    print("Num of Faces:",num_of_faces)
     # print("Faces:",type(faces),faces)
     i=-1
     face_array=loader.np.empty(shape=(num_of_faces,pims[0],pims[1],pims[2]),dtype=img.dtype)
@@ -269,7 +269,7 @@ def getFacesForPrediction (img,prediction_img_shape):
         face_array[i]=loader.cv.resize(img[ y:y+h,x:x+w],(pims[0],pims[1]))
         #cv.imshow(str(i),face_array[i])
         
-        print("Face Shape: ",face_array.shape)
+        # print("Face Shape: ",face_array.shape)
         #cv.waitKey(0)
         #print(":",i,":",face_array)
     #cv.destroyAllWindows()
@@ -308,7 +308,7 @@ def labelFaces (model_loc,model_metadata_loc,image):
     confusion_list =[]# A list of list of the form [label_with_max_score, similar_label_1, similar_label_2,...]
     labels_and_confidences=[]# list of tuples like (0,0.98) where 0 is the predicted class label, with a confidence of 98%
     
-    print("Pred_labels",pred_labels.shape)
+    # print("Pred_labels",pred_labels.shape)
     
     for i in range(face_array.shape[0]):
         max_score_label=loader.np.argmax(pred_labels[i])
@@ -366,9 +366,9 @@ def getTrainableData(dataset_loc,dataset_metadata_loc):
        
         x,y_tr=next_batch(b_size,f,metadata)
         x=normalizeAsDuringTraining(x)
-        print("x:",x.shape)
-        print("y:",y.shape)
-        print(y_tr)
+        # print("x:",x.shape)
+        # print("y:",y.shape)
+        # print(y_tr)
         y = np_utils.to_categorical(y_tr, nb_classes)
         return (x,y)
     
@@ -450,7 +450,7 @@ class lambdaHelper(Callback):
             
         else:
             if (self.current_acc>=self.acc_begin and self.first_save):
-                print("\n\n------FIRST SAVE----------------\n\n")
+                print("\n\n---------------- FIRST SAVE ----------------\n\n")
                 print("Acc",self.current_acc)
                 #dummy=input("Press 1 and Enter")
                 
@@ -465,7 +465,7 @@ class lambdaHelper(Callback):
                 dummy=input("First Save")
                 #dummy=input("Press 1 and Enter")
             elif((self.current_acc-self.last_update_acc)>=self.delta_update and self.first_save==False):
-                print("\n\n------MODEL SAVE----------------\n\n","Acc",self.current_acc)
+                print("\n\n---------------- MODEL SAVE ----------------\n\n","Acc",self.current_acc)
                 #dummy=input("Press 1 and Enter")
                 self.model.save(self.folder+"/"+self.fn+"_"+str(current_epoch)+".h5")
                 self.last_update_acc=self.current_acc
@@ -474,7 +474,7 @@ class lambdaHelper(Callback):
                 if(self.best_acc<=self.current_acc):
                     print("Acc",self.current_acc)
                     
-                    print("\n\n------NEW BEST SAVE----------------\n\n","Acc",self.current_acc)
+                    print("\n\n---------------- NEW BEST SAVE ----------------\n\n","Acc",self.current_acc)
                     #dummy=input("Press 1 and Enter")
                     self.best_model_loc=self.folder+"/"+self.fn+"_"+str(self.current_epoch)+".h5"
                     self.best_acc=self.current_acc
@@ -555,7 +555,7 @@ def getCustomOptimalTrainedModel(model_to_train,dataset_loc,metadata_loc,
         print("Using Best One")
         generated_model_address=save_at_intervals.best_model_loc#STORE_FOLDER+'/'+op_model_file_name+'.h5'
         generated_model_md_address= generated_model_address[0:-3]+"_metadata"
-        print(generated_model_address)
+        # print(generated_model_address)
     else:
         generated_model_address=STORE_FOLDER+"/"+op_model_file_name+".h5"
         generated_model_md_address=STORE_FOLDER+"/"+op_model_file_name+"_metadata"
