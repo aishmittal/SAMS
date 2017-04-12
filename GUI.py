@@ -51,14 +51,9 @@ def multiple_select_query(comm,params=()):
 def select_query(comm,params=()):
     cursor.execute(comm,params)
     res = cursor.fetchall()
-    res =[x[0].encode('utf8') for x in res]
-    return res
-
-def int_select_query(comm,params=()):
-    cursor.execute(comm,params)
-    res = cursor.fetchall()
     res =[x[0] for x in res]
     return res
+
 
 
 
@@ -125,14 +120,14 @@ class WindowMain(QWidget):
         # Take Attendance
         winTakeAttnSelectClass.setGeometry(winTakeAttnSelectClass.frameGeometry())
         win.hide()
-        winTakeAttnSelectClass.initSubjectSelect()
+        winTakeAttnSelectClass.reset()
         winTakeAttnSelectClass.show()
 
     def onclick_button3(self):
         # Take Attendance
         winShowAttnSelectClass.setGeometry(winShowAttnSelectClass.frameGeometry())
         win.hide()
-        winShowAttnSelectClass.initSubjectSelect()
+        winShowAttnSelectClass.reset()
         winShowAttnSelectClass.show()
 
     def quitApp(self):
@@ -568,7 +563,7 @@ class WindowRegisterStudentPhotos(QWidget):
     def finishRegistration(self):
         try:
             sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)        
-            enroll_list = int_select_query(sql_command)
+            enroll_list = select_query(sql_command)
             col = ""
             for i in enroll_list:
                 col+=",\n'%s' INTEGER NOT NULL DEFAULT 0" % (str(i))
@@ -668,37 +663,74 @@ class WindowTakeAttnSelectClass(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        
 
     def initUI(self):
-        self.setWindowTitle("Select Subject")
-        self.resize(window_width, window_height)
+        self.setWindowTitle("Take Attendance")
+        self.resize(window_width, window_height+100)
         self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
         self.vbox = QVBoxLayout()
+        self.subjectSelectLbl = QLabel('Select Subject')
+   
         self.subjectSelect = QListWidget()
-      
+        # self.subjectSelect.setSortingEnabled(True)
+
         self.hbox = QHBoxLayout()
+
         self.startButton = QPushButton("Start", self)
         self.startButton.clicked.connect(self.startClass)
         self.backButton = QPushButton("Back", self)
         self.backButton.clicked.connect(self.back)
         
+        self.vbox2 = QVBoxLayout()
+        self.vbox2.setAlignment(Qt.AlignCenter)
+        self.modeLbl = QLabel('Select Attendance Mode')
+        self.automaticButton = QRadioButton('Automatic')
+        self.automaticButton.setChecked(True)
+        self.manualButton = QRadioButton('Manual')
+        self.delayLbl = QLabel('Time Delay (in seconds)')
+        self.timeDelay = QSpinBox()
+        self.timeDelay.setRange(10,120)
+        self.timeDelay.setSingleStep(10)
+     
+
+        self.hbox2=QHBoxLayout()
+        self.hbox3=QHBoxLayout()
+
+        self.hbox2.addWidget(self.automaticButton)
+        self.hbox2.addWidget(self.manualButton)
+        self.hbox3.addWidget(self.delayLbl)
+        self.hbox3.addWidget(self.timeDelay)
+        self.hbox3.addStretch()
+
+        self.vbox2.addWidget(self.modeLbl)
+        
+        self.vbox2.addLayout(self.hbox2)
+        self.vbox2.addLayout(self.hbox3)
+
         self.hbox.addWidget(self.startButton)
         self.hbox.addWidget(self.backButton)
         
+        self.vbox.addWidget(self.subjectSelectLbl)
         self.vbox.addWidget(self.subjectSelect)
+        self.vbox.addLayout(self.vbox2)
         self.vbox.addLayout(self.hbox)
         self.vbox.setAlignment(Qt.AlignCenter)
         self.setLayout(self.vbox)
-        self.initSubjectSelect()
+        self.reset()
 
-
-    def initSubjectSelect(self):
+    def reset(self):
         self.subjectSelect.clear()
         sql_command = """SELECT * FROM subjects"""
         self.res = multiple_select_query(sql_command)
         if len(self.res)>0:
             for i in range(0,len(self.res)):
-                self.subjectSelect.addItem(self.res[i][1])
+                self.subjectSelect.addItem(self.res[i][1] + ' (' + self.res[i][2]+ ') ')
+        self.automaticButton.setChecked(True)
+        self.timeDelay.setValue(60)
+        self.subjectSelect.setCurrentRow(0)
+
+
         
     def back(self):
         win.setGeometry(win.frameGeometry())
@@ -733,7 +765,7 @@ class WindowTakeAttnSelectClass(QWidget):
         # print(sql_command)            
         try:
             sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)        
-            enroll_list = int_select_query(sql_command)
+            enroll_list = select_query(sql_command)
             col = ""
             for i in enroll_list:
                 col+=",\n'%s' INTEGER NOT NULL DEFAULT 0" % (str(i))
@@ -750,8 +782,16 @@ class WindowTakeAttnSelectClass(QWidget):
 
         winTakeAttnGroupPhotos.setGeometry(winTakeAttnGroupPhotos.frameGeometry())
         winTakeAttnSelectClass.hide()
+        
+        if self.automaticButton.isChecked() == True:
+            winTakeAttnGroupPhotos.setMode(0,self.timeDelay.value())
+        else:
+            winTakeAttnGroupPhotos.setMode(1,self.timeDelay.value())
+
+        self.reset()     
+
+        
         winTakeAttnGroupPhotos.show()
-        winTakeAttnGroupPhotos.imageLabel.clear()
         winTakeAttnGroupPhotos.setWindowTitle("Take Attendance Photos for " + subject_name + " class")
         
 
@@ -767,7 +807,6 @@ class WindowTakeAttnGroupPhotos(QWidget):
         self.snapshot_size = QSize(80, 80)
         self.cascPath = 'haarcascade_frontalface_default.xml'
         self.faceCascade = cv2.CascadeClassifier(self.cascPath)
-        self.snapshotCnt=0
         self.attendance_record={}
         self.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
         self.initUI()
@@ -821,6 +860,27 @@ class WindowTakeAttnGroupPhotos(QWidget):
         self.hbox1=QHBoxLayout()
         self.hbox1.addWidget(self.splitter2)
         self.setLayout(self.hbox1)
+        self.reset()
+
+    def reset(self):
+        self.imageLabel.clear()
+        self.time_delay=60
+        self.mode = 0
+        self.snapshotCnt=0
+        self.attendance_record = {}
+     
+
+
+    def setMode(self,mode,time_delay=1):
+        print('Mode:' ,mode)
+        print('Time Delay: ',time_delay)
+        self.mode = mode
+        self.time_delay = time_delay
+        if self.mode == 0:
+            self.takeSnapshotButton.setEnabled(False)
+        else:
+            self.takeSnapshotButton.setEnabled(True)
+
 
 
     def display_video_stream(self):
@@ -854,7 +914,7 @@ class WindowTakeAttnGroupPhotos(QWidget):
                 sql_command = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)
                 # cursor.execute(sql_command)
                 # res = cursor.fetchall()
-                res = int_select_query(sql_command)
+                res = select_query(sql_command)
                 print(res)
                 if len(res)>0:
                     # print(res)
@@ -866,6 +926,13 @@ class WindowTakeAttnGroupPhotos(QWidget):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.display_video_stream)
         self.timer.start(30)
+        if self.mode == 0:
+            self.automaticCapture()
+
+    def automaticCapture(self):
+        self.timer2 = QtCore.QTimer()
+        self.timer2.timeout.connect(self.takeSnapshot)
+        self.timer2.start(self.time_delay*1000)
 
     def stopCapture(self):
         #print "pressed End"
@@ -873,6 +940,8 @@ class WindowTakeAttnGroupPhotos(QWidget):
             self.capturing = False
             self.capture.release()
             self.timer.stop()
+            if self.mode == 0:
+                self.timer2.stop()                
             cv2.destroyAllWindows()
 
     def takeSnapshot(self):
@@ -926,21 +995,30 @@ class WindowTakeAttnGroupPhotos(QWidget):
     def endClass(self):
         print("--------------- Class Ended -----------------")
         print("Final Attandance Records: ",self.attendance_record)
-        val1 = ''
-        val2 = ''
-        for enroll, present in self.attendance_record.items():
-            val1 = val1+"'"+ str(enroll)+"'" + ','
-            val2  = val2+str(present) + ','
-        val1 = val1[:-1]
-        val2 = val2[:-1]    
-        format_str = """INSERT INTO %s (%s) VALUES (%s);""" % (current_subject_code,val1,val2)
-        # print(format_str)
-              
-        conn.execute(format_str)
-        conn.commit()
+        if self.snapshotCnt>0:
+            try:
+                val1 = ''
+                val2 = ''
+                for enroll, present in self.attendance_record.items():
+                    val1 = val1+"'"+ str(enroll)+"'" + ','
+                    val2  = val2+str(present) + ','
+                val1 = val1[:-1]
+                val2 = val2[:-1]    
+                format_str = """INSERT INTO %s (%s) VALUES (%s);""" % (current_subject_code,val1,val2)
+                # print(format_str)
+                      
+                conn.execute(format_str)
+                conn.commit()
+                self.stopCapture()
+
+            except Exception as e:
+                    print("Error while exiting class...\n Errors:")
+                    print(e)
+        else:
+            print("No snapshot taken so attendance not marked!")
+        
         self.stopCapture()
-        self.snapshotCnt=0
-        self.attendance_record = {}
+        self.reset()
         win.setGeometry(win.frameGeometry())
         winTakeAttnGroupPhotos.hide()
         win.show()
@@ -953,11 +1031,14 @@ class WindowShowAttnSelectClass(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("Select Subject")
+        self.setWindowTitle("Show Attendance Records")
         self.resize(window_width, window_height)
         self.move(QApplication.desktop().screen().rect().center()- self.rect().center())
         self.vbox = QVBoxLayout()
+        self.subjectSelectLbl = QLabel('Select Subject')
         self.subjectSelect = QListWidget()
+
+        # self.subjectSelect.setSortingEnabled(True)
       
         self.showButton = QPushButton("Show Attendance Records", self)
         self.showButton.clicked.connect(self.showAttn)
@@ -966,20 +1047,25 @@ class WindowShowAttnSelectClass(QWidget):
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.showButton)
         self.hbox.addWidget(self.backButton)
+
+        self.vbox.addWidget(self.subjectSelectLbl)
         self.vbox.addWidget(self.subjectSelect)
         self.vbox.addLayout(self.hbox)
         self.vbox.setAlignment(Qt.AlignCenter)
         self.setLayout(self.vbox)
-        self.initSubjectSelect()
+        self.reset()
         
 
-    def initSubjectSelect(self):
+    def reset(self):
         self.subjectSelect.clear()
         sql_command = """SELECT * FROM subjects"""
         self.res = multiple_select_query(sql_command)
         if len(self.res)>0:
             for i in range(0,len(self.res)):
-                self.subjectSelect.addItem(self.res[i][1])
+                item = QListWidgetItem(self.res[i][1] + ' (' + self.res[i][2]+ ') ')
+                self.subjectSelect.addItem(item)
+        
+        self.subjectSelect.setCurrentRow(0)
         
 
     def showAttn(self):
@@ -1017,10 +1103,17 @@ class WindowShowAttnRecords(QWidget):
         self.vbox = QVBoxLayout()
         self.vbox.setAlignment(Qt.AlignCenter)
         self.recordsTable = QTableWidget()
+        
+        self.hbox=QHBoxLayout()
         self.backButton = QPushButton('Back')
+        self.backButton.setFixedWidth(400)
         self.backButton.clicked.connect(self.back)
+        self.hbox.addWidget(self.backButton)
+
+        self.vbox.setAlignment(Qt.AlignCenter)
         self.vbox.addWidget(self.recordsTable)
-        self.vbox.addWidget(self.backButton)
+        self.vbox.addLayout(self.hbox)
+        
         self.setLayout(self.vbox)
         
         
@@ -1030,11 +1123,14 @@ class WindowShowAttnRecords(QWidget):
             sql_command1 = "SELECT * FROM %s" % (current_subject_code)
             res1 = multiple_select_query(sql_command1)
             sql_command2 = "SELECT enroll_no FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)
-            enroll_list = int_select_query(sql_command2)
+            enroll_list = select_query(sql_command2)
+            sql_command2 = "SELECT student_name FROM reg_students WHERE subject_code = '%s' ORDER BY enroll_no" % (current_subject_code)
+            name_list = select_query(sql_command2)
+
             lecture_count = len(res1)
             # print(res1,enroll_list)
 
-            self.tableHeaders = ['Enrollment No','Total Lectures','Present Count','Percent Attendance']
+            self.tableHeaders = ['Enrollment No','Student Name','Total Lectures','Present Count','Percent Attendance']
             # for i in range(0,lecture_count):
             #     self.tableHeaders.append('Lecture '+str(i+1))
 
@@ -1055,7 +1151,7 @@ class WindowShowAttnRecords(QWidget):
 
             for idx,enroll_no in enumerate(enroll_list):
                 sql_command = "SELECT `%s` FROM %s" % (str(enroll_no),current_subject_code)
-                attn = int_select_query(sql_command)
+                attn = select_query(sql_command)
                 present = 0
                 for i in attn:
                     present=present+i
@@ -1064,10 +1160,12 @@ class WindowShowAttnRecords(QWidget):
                 # print(sql_command)
                 # print(attn)
                 # row_content = [enroll_no]+attn+[present,str_attn_percent]
-                row_content = [enroll_no,len(attn),present,str_attn_percent]
+                row_content = [enroll_no,name_list[idx],len(attn),present,str_attn_percent]
                 # print(row_content)
                 for pos , item in enumerate(row_content):
-                        self.recordsTable.setItem(idx, pos , QTableWidgetItem(str(item)))
+                        table_item = QTableWidgetItem(str(item))
+                        table_item.setTextAlignment(Qt.AlignCenter)
+                        self.recordsTable.setItem(idx, pos , table_item)
 
 
 
