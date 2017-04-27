@@ -1,0 +1,15 @@
+SPECS:
+label_array_shape->(13, 1)
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/PHY_train.h5
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_PHY_10_8.h5
+data_batch_size->50
+shape->(50, 50, 3)
+training_batch_size->10
+nb_classes->2
+dataset_shape->(13, 7500)
+dtype->uint8
+:SPECS_END
+LABEL_MAP:
+0->14115107
+1->14115008
+:LABEL_MAP_END

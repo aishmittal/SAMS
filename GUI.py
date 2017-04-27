@@ -272,7 +272,7 @@ class WindowRegisterStudentDetails(QWidget):
         self.move(QApplication.desktop().screen().rect().center() - self.rect().center())
         self.fbox = QFormLayout()
 
-        self.textLabel1 = QLabel("Enrollment No: ", self)
+        self.textLabel1 = QLabel("Enrolment No: ", self)
         self.textLabel2 = QLabel("Student Name: ", self)
         self.messageLbl = QLabel('')
         self.lineEdit1 = QLineEdit(self)
@@ -1012,8 +1012,13 @@ class WindowShowAttnSelectClass(QWidget):
         self.subjectSelect = QListWidget()
 
         # self.subjectSelect.setSortingEnabled(True)
+<<<<<<< Updated upstream
 
         self.showButton = QPushButton("Show Attendance Records", self)
+=======
+      
+        self.showButton = QPushButton("Next", self)
+>>>>>>> Stashed changes
         self.showButton.clicked.connect(self.showAttn)
         self.backButton = QPushButton('Back')
         self.backButton.clicked.connect(self.back)
@@ -1099,8 +1104,12 @@ class WindowShowAttnRecords(QWidget):
             lecture_count = len(res1)
             # print(res1,enroll_list)
 
+<<<<<<< Updated upstream
             self.tableHeaders = ['Enrollment No', 'Student Name', 'Total Lectures', 'Present Count',
                                  'Percent Attendance']
+=======
+            self.tableHeaders = ['Enrolment No','Student Name','Total Lectures','Present Count','Percent Attendance']
+>>>>>>> Stashed changes
             # for i in range(0,lecture_count):
             #     self.tableHeaders.append('Lecture '+str(i+1))
 
@@ -1153,8 +1162,12 @@ class MainWindow:
         self.winRegisterStudentDetails = WindowRegisterStudentDetails()
         self.winRegisterStudentPhotos = WindowRegisterStudentPhotos()
         self.winTakeAttnGroupPhotos = WindowTakeAttnGroupPhotos()
+<<<<<<< Updated upstream
         self.win.show()
 
+=======
+        self.win.show()        
+>>>>>>> Stashed changes
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
