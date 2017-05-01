@@ -340,6 +340,8 @@ def labelFaces (model_loc,model_metadata_loc,image):
             raise ValueError
         labels_and_confidences.append((max_score_label,max_score))
     
+
+    print(pred_labels)
     
     return {"image":img, "label_map":md[1],
             "predicted_labels_and_confidences":labels_and_confidences,

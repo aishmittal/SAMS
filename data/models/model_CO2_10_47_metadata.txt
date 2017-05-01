@@ -1,0 +1,17 @@
+SPECS:
+label_array_shape->(70, 1)
+data_batch_size->50
+training_batch_size->10
+dataset_shape->(70, 7500)
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_CO2_10_47.h5
+dtype->uint8
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/CO2_train.h5
+nb_classes->4
+shape->(50, 50, 3)
+:SPECS_END
+LABEL_MAP:
+0->118
+1->107
+2->045
+3->008
+:LABEL_MAP_END

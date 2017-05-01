@@ -1,0 +1,17 @@
+SPECS:
+dtype->uint8
+dataset_shape->(51, 7500)
+shape->(50, 50, 3)
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_COM_10_21.h5
+training_batch_size->10
+nb_classes->4
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/COM_train.h5
+data_batch_size->50
+label_array_shape->(51, 1)
+:SPECS_END
+LABEL_MAP:
+0->14115107
+1->14115118
+2->14115008
+3->14115045
+:LABEL_MAP_END

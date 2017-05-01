@@ -166,8 +166,8 @@ class WindowRegister(QWidget):
         self.backButton = QPushButton("Back", self)
         self.backButton.clicked.connect(self.back)
 
-        self.hbox.addWidget(self.backButton)
         self.hbox.addWidget(self.nextButton)
+        self.hbox.addWidget(self.backButton)
         self.hbox.setObjectName('gframe')
 
         self.fbox.addRow(self.textLabel1, self.lineEdit1)
@@ -345,7 +345,8 @@ class WindowRegisterStudentPhotos(QWidget):
         self.cascPath = 'haarcascade_frontalface_default.xml'
         self.faceCascade = cv2.CascadeClassifier(self.cascPath)
         self.snapshotCnt = 0
-        self.maxSnapshotCnt = 8
+        self.maxSnapshotCnt = 16
+        self.maxGridCount = 8
         self.captureCompleted = False
         self.reg_count = 0
         self.total_student_count = 0
@@ -428,7 +429,7 @@ class WindowRegisterStudentPhotos(QWidget):
                 os.umask(original_umask)
 
     def initGrid(self):
-        range_x = int((self.maxSnapshotCnt + 1) / 2)
+        range_x = int((self.maxGridCount + 1) / 2)
         self.snpLabels = []
         for i in range(self.maxSnapshotCnt):
             self.snpLabels.append(QLabel())
@@ -471,7 +472,8 @@ class WindowRegisterStudentPhotos(QWidget):
         self.captureCompleted = False
         self.capturing = False
         self.imageLabel.clear()
-        self.reg_count += 1
+        self.reg_count = self.reg_count+1
+        winRegisterStudentDetails.newStudentAdded()
         if self.reg_count == self.total_student_count - 1:
             self.nextButton.setText('Train Model')
 
@@ -489,6 +491,8 @@ class WindowRegisterStudentPhotos(QWidget):
         self.reg_count = 0
         self.total_student_count = n
 
+
+
     def trainModel(self):
 
         LOAD_PATH = os.path.join(image_path, current_subject_code)
@@ -503,7 +507,8 @@ class WindowRegisterStudentPhotos(QWidget):
         TBS = 10  # training batch size
         DMY = "no val"  # dummmy
         try:
-
+            winRegisterStudentPhotos.setGeometry(winRegisterStudentPhotos.frameGeometry())
+            winRegisterStudentPhotos.hide()
             print('-------------------- Model Training Started --------------------')
             dsop.createSingleBlockDataset(LOAD_PATH, DSETP, DSETFN, (50, 50, 3))
             md = dsop.loadMetaData(DSETP + '/' + DSETFN + '_metadata.txt')
@@ -568,8 +573,8 @@ class WindowRegisterStudentPhotos(QWidget):
             print("Error while creating attendance table...\nERRORS:")
             print(e)
 
-        winRegisterStudentPhotos.setGeometry(winRegisterStudentPhotos.frameGeometry())
-        winRegisterStudentPhotos.hide()
+        # winRegisterStudentPhotos.setGeometry(winRegisterStudentPhotos.frameGeometry())
+        # winRegisterStudentPhotos.hide()
         win.show()
 
     def startCapture(self):
@@ -634,7 +639,7 @@ class WindowRegisterStudentPhotos(QWidget):
                 file_name = 'img_%d.jpg' % (self.snapshotCnt)
                 file = os.path.join(self.store_dir, file_name)
                 cv2.imwrite(file, image_crop)
-                self.snpLabels[self.snapshotCnt - 1].setPixmap(QPixmap(file))
+                self.snpLabels[(self.snapshotCnt - 1)%8].setPixmap(QPixmap(file))
 
             except Exception as e:
                 self.messageLbl.setText('Error: Snapshot capturing failed')
@@ -942,14 +947,18 @@ class WindowTakeAttnGroupPhotos(QWidget):
 
                     self.snapshotCnt += 1
                     pred_results = cmg.labelFaces(current_model_path, current_model_md_path, frame)
+                    cv2.imshow("Img",pred_results['image'])
+
+                    #cv2.waitKey(0)
                     # print("--- Predicted Results --- : \n ",pred_results)
                     print("--- Predicted Results --- : \n ")
                     print("Label Map : ", pred_results['label_map'])
                     print("Predicted Labels and confidences : ", pred_results['predicted_labels_and_confidences'])
+                    print("Predicted Labels and confidences : ", pred_results["prediction_matrix"])
                     dict_label = dict(pred_results['label_map'])
 
                     for lbl, cnf in pred_results['predicted_labels_and_confidences']:
-                        if cnf >= 0.50:
+                        if cnf >= 0.30:
                             enroll = dict_label[lbl]
                             if self.attendance_record[enroll] == 0:
                                 self.attendance_record[enroll] = 1
@@ -1012,13 +1021,13 @@ class WindowShowAttnSelectClass(QWidget):
         self.subjectSelect = QListWidget()
 
         # self.subjectSelect.setSortingEnabled(True)
-<<<<<<< Updated upstream
 
-        self.showButton = QPushButton("Show Attendance Records", self)
-=======
+
+        # self.showButton = QPushButton("Show Attendance Records", self)
+
       
         self.showButton = QPushButton("Next", self)
->>>>>>> Stashed changes
+
         self.showButton.clicked.connect(self.showAttn)
         self.backButton = QPushButton('Back')
         self.backButton.clicked.connect(self.back)
@@ -1104,12 +1113,9 @@ class WindowShowAttnRecords(QWidget):
             lecture_count = len(res1)
             # print(res1,enroll_list)
 
-<<<<<<< Updated upstream
             self.tableHeaders = ['Enrollment No', 'Student Name', 'Total Lectures', 'Present Count',
                                  'Percent Attendance']
-=======
-            self.tableHeaders = ['Enrolment No','Student Name','Total Lectures','Present Count','Percent Attendance']
->>>>>>> Stashed changes
+
             # for i in range(0,lecture_count):
             #     self.tableHeaders.append('Lecture '+str(i+1))
 
@@ -1162,12 +1168,8 @@ class MainWindow:
         self.winRegisterStudentDetails = WindowRegisterStudentDetails()
         self.winRegisterStudentPhotos = WindowRegisterStudentPhotos()
         self.winTakeAttnGroupPhotos = WindowTakeAttnGroupPhotos()
-<<<<<<< Updated upstream
         self.win.show()
 
-=======
-        self.win.show()        
->>>>>>> Stashed changes
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
