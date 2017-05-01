@@ -15,7 +15,7 @@ HAAR_CASCADE_CLASSIFIER_LOCATION=os.path.join(base_path,'haarcascade_frontalface
 
 
 
-CT={"blank":0 , "not_sure":0.6, "present":0.8 ,  "similar":0.15 }#CONFIDENCE_THRESHOLD
+CT={"blank":0 , "not_sure":0.3, "present":0.6 ,  "similar":0.15 }#CONFIDENCE_THRESHOLD
 # tweak_ May Add another level : can be resolved using closer look on rest of the scores
 
 #Model Signatures

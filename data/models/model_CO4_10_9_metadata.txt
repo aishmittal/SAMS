@@ -1,0 +1,15 @@
+SPECS:
+dtype->uint8
+data_batch_size->50
+nb_classes->2
+training_batch_size->10
+shape->(50, 50, 3)
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/CO4_train.h5
+dataset_shape->(25, 7500)
+label_array_shape->(25, 1)
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_CO4_10_9.h5
+:SPECS_END
+LABEL_MAP:
+0->14115107
+1->14115008
+:LABEL_MAP_END

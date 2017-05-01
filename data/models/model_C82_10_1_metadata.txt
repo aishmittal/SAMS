@@ -1,0 +1,15 @@
+SPECS:
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_C82_10_1.h5
+dataset_shape->(25, 19200)
+label_array_shape->(25, 1)
+shape->(80, 80, 3)
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/C82_train.h5
+dtype->uint8
+training_batch_size->10
+data_batch_size->80
+nb_classes->2
+:SPECS_END
+LABEL_MAP:
+0->14115107
+1->14115008
+:LABEL_MAP_END

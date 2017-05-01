@@ -1,0 +1,16 @@
+SPECS:
+training_batch_size->10
+dataset_trained_on->/home/aishwarya/Documents/sams/data/datasets/C85_train.h5
+nb_classes->3
+dtype->uint8
+shape->(80, 80, 3)
+label_array_shape->(38, 1)
+dataset_shape->(38, 19200)
+data_batch_size->80
+original_model_address->/home/aishwarya/Documents/sams/data/models/model_C85_10_52.h5
+:SPECS_END
+LABEL_MAP:
+0->14115107
+1->14115118
+2->14115008
+:LABEL_MAP_END
